@@ -1056,7 +1056,7 @@ Deep learning technique for learning latent representations.
 
 Directed latent-variable model: $$p(x,z)=p(x\vert z)p(z)$$
 
-Deep generative model with $$m$$ layers: $$p(x, z_1, \dots, z_m) = p(x \vert z_1)p(z_1\vert z_2)\dotsp(z_{m-1}\vert z_m)p(z_m)$$
+Deep generative model with $$m$$ layers: $$p(x, z_1, \dots, z_m) = p(x \vert z_1)p(z_1\vert z_2)\dots p(z_{m-1}\vert z_m)p(z_m)$$
 
 Objectives:
 * learning parameters $$\theta$$ of $$p$$
@@ -1068,7 +1068,7 @@ Assumptions:
 * dataset is too large to fit in memory
 
 Standard approaches?
-* EM: need to compute posterior $$p(z\ver x)$$ (intractable) + would need to use online version of EM to perform M-step.
+* EM: need to compute posterior $$p(z\vert x)$$ (intractable) + would need to use online version of EM to perform M-step.
 * mean field: requires us to compute expectation. Time complexity scales exponentially with size of Markov blanket of target variable. For $$z$$, if at least one component of $$x$$ depends on each component of $$z$$, this introduces V-structure ($$x$$ explains away differences among $$z$$) and Markov blanket of some $$z_i$$ contains all the other $$z$$-variables (intractable)
 * sampling-based methods: authors (Kingma and Welling) found that they don't scale well on large datasets
 
@@ -1105,7 +1105,11 @@ $$\nabla_\phi \mathbb{E}_{q_\phi(z)}[\log p_\theta (x,z) - \log q_\phi(z)] = \ma
 However, score function estimator has high variance. VAE paper proposes alternative estimator that is much better behaved.
 
 **SGVB estimator**
-$$\mathcal{L}(p_\theta, q_\phi) = \mathbb{E}_q[\log p_\theta (x,z) - \log q_\phi(z\vert x)] = \mathbb{E}_q[\log p_\theta (x\vert z)p_\theta(z)] - \mathbb{E}_q [\log q_\phi(z\vert x)] = \mathbb{E}_q \log p_\theta (z) - KL(q_\phi (z\vert x) \Vert p(z))$$
+$$\mathcal{L}(p_\theta, q_\phi) = \mathbb{E}_q[\log p_\theta (x,z) - \log q_\phi(z\vert x)]$$
+
+$$= \mathbb{E}_q[\log p_\theta (x\vert z)p_\theta(z)] - \mathbb{E}_q [\log q_\phi(z\vert x)]$$
+$$
+= \mathbb{E}_q \log p_\theta (z) - KL(q_\phi (z\vert x) \Vert p(z))$$
 
 Thus the ELBO becomes:
 $$\log p_\theta (x) \geq \mathbb{E}_{q_\phi(z\vert x)} \log p_\theta (z) - KL(q_\phi (z\vert x) \Vert p(z))$$
@@ -1118,7 +1122,7 @@ Interpretation:
 
 Main contribution of the paper is a low-variance gradient estimator based on the **reparameterization trick**:
 
-$$ \nabla_\phi \E_{z \sim q_\phi(z\mid x)}\left[ f(x,z) \right] = \nabla_\phi \E_{\epsilon \sim p(\epsilon)}\left[ f(x, g_\phi(\epsilon, x)) \right] = \E_{\epsilon \sim p(\epsilon)}\left[ \nabla_\phi f(x, g_\phi(\epsilon, x)) \right]. $$
+$$ \nabla_\phi \mathbb{E}_{z \sim q_\phi(z\mid x)}\left[ f(x,z) \right] = \nabla_\phi \mathbb{E}_{\epsilon \sim p(\epsilon)}\left[ f(x, g_\phi(\epsilon, x)) \right] = \mathbb{E}_{\epsilon \sim p(\epsilon)}\left[ \nabla_\phi f(x, g_\phi(\epsilon, x)) \right]. $$
 
 where noise variable $$\epsilon$$ is sampled from a simple distribution $$p(\epsilon)$$ (e.g. standard normal) and deterministic transformation $$g_\phi(\epsilon, x)$$ maps random noise into more complex distribution $$q_\phi(z\vert x)$$.
 

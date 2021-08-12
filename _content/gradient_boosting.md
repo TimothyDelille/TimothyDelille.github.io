@@ -7,6 +7,9 @@ author: Jerome Friedman, 1999
 * TOC
 {:toc}
 
+
+[See original paper](https://statweb.stanford.edu/~jhf/ftp/trebst.pdf)
+
 ## 1. Function estimation
 Given training sample $$\{y_i, x_i\}_1^N$$, the goal is to obtain approximation $$\hat{F}$$ of the function $$F^*: x\rightarrow y$$ that minimizes the expected value of some loss function $$L(y, F(x))$$ over the joint distribution of all $$(y, x)$$ values.
 

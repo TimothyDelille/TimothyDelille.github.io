@@ -212,7 +212,7 @@ Note: some argue that you should not try to fix class imbalance if that's how th
 
 **Undersampling: Tomek links**
 
-Find pairs of samples from opposite class that are close and rome the majority class. Clear decision boundary but possible under-fitting:
+Find pairs of samples from opposite class that are close and remove the majority class. Clear decision boundary but possible under-fitting:
 
 ![Tomek links](../assets/img/stanford_cs329s_machine_learning_systems_design/tomek_links.png)
 
@@ -227,6 +227,8 @@ Sample convex (=linear) combinations of existing data points within the minority
 For CV: random cropping, flipping, erasing, etc...
 
 Mixup (for speech and tabular data): mix X% of class A and Y% of class B. Incentivizes model to learn linear relationsips (assumption is that linear behavior reduces variance outside training set)
+
+GANs: e.g. [Data augmentation using generative adversarial networks (CycleGAN) to improve generalizability in CT segmentation tasks](https://www.nature.com/articles/s41598-019-52737-x)
 
 #### Loss adjustment: weight balancing
 **Biasing towards rare class**
@@ -261,3 +263,43 @@ See:
 * [Gradient Boosting Machine](timothydelille.github.io/content/gradient_boosting.html) (gradient descent in function space)
 * XGBoost (variant of Gradient Boosting Machine): used to be algorithm of choice for winning competitions
 * LightGBM: dethroned XGBoost in competitions. Faster training for similar accuracy.
+
+## Model selection baselines
+Random baseline, Most-common class, Human baseline, simple heuristic, existing solutions (APIs)
+
+## When to use deep learning in practice
+* task can be reduced to generally "solved" image or text task
+* "fine-tuning" an existing model instead of training a model
+from scratch
+* lots of data (>10k examples)
+* data is balanced
+* data doesn't change over time
+
+## Scaling
+Larger models + more data
+![scale](../assets/img/stanford_cs329s_machine_learning_systems_design/scale.png)
+
+Need distributed training (GPT-3 would need 355 years to train on a single GPU).
+
+- BERT (2018): 110M (Base) - 340M (Large)
+- T5 (2019): 60M (Small) - 11B (Large)
+- GPT-3 (2020): 125M (Small) - 75B (Large)
+- Switch Transformer (2021): 1 Trillion
+
+1B parameters at floating point 16 (fp16 = 16 bits = 2 bytes): $$10^9 * 2 = 1.86 GB$$. 175B parameters = 316.2 GB
+
+NVIDIA A100 80GB GPU (2020): not enough memory.
+
+See [Mixed Precision Training](https://arxiv.org/pdf/1710.03740.pdf).
+
+Forward activations are a major source of memory usage: minibatch size x # parameters
+
+**Solution 1: gradient checkpointing**: see [article by OpenAI](https://medium.com/tensorflow/fitting-larger-networks-into-memory-583e3c758ff9) (10x larger models against +20% computation)
+
+**Solution 2: data parallelism for large batch training** (each device replicates model and optimizer but sees a fraction of the batch). Communication between nodes needed to synchronize gradients (message passing interface, NVIDIA collective communications library, facebook gloo). All-reduce: every GPU sends tensors to designated manager who reduces them and sends results back to workers.
+
+Columnar data: apache parquet (Disk), apache Arrow (in-memory)
+Parallel workers: apache Spark, multiprocessing, multithreading
+Libraries: Huggingface Datasets, Uber Petastorm, Tensorflow Datasets
+
+**Further readings**: Exploring the limits of weakly supervised pretraining, MegatronLM: training Billion+ parameters Language Models using GPU Model Parallelism
